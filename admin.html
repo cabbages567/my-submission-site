@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>管理后台</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .status { padding: 3px 8px; border-radius: 3px; }
+        .pending { background: #ffeaa7; }
+        .accepted { background: #55efc4; }
+        .rejected { background: #fab1a0; }
+    </style>
+</head>
+<body>
+    <h1>🔧 投稿管理后台</h1>
+    <p>密码：<input type="password" id="password" placeholder="输入管理密码">
+    <button onclick="loadData()">登录/刷新</button></p>
+
+    <div id="list">请在上方输入密码后点击登录。</div>
+
+    <script>
+        const API_URL = 'https://your-railway-backend-url.up.railway.app'; // 第5步会修改这里
+
+        async function loadData() {
+            const password = document.getElementById('password').value;
+            if (!password) {
+                alert('请输入密码');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/admin/submissions?password=${password}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    alert(`错误: ${data.error}`);
+                    return;
+                }
+
+                let html = '<table><tr><th>ID</th><th>标题</th><th>作者</th><th>状态</th><th>操作</th></tr>';
+                data.forEach(item => {
+                    html += `
+                        <tr>
+                            <td>${item.id}</td>
+                            <td>${item.title}</td>
+                            <td>${item.author}</td>
+                            <td><span class="status ${item.status}">${item.status}</span></td>
+                            <td>
+                                <button onclick="updateStatus(${item.id}, 'accepted')">录用</button>
+                                <button onclick="updateStatus(${item.id}, 'rejected')">退稿</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                html += '</table>';
+                document.getElementById('list').innerHTML = html;
+            } catch (err) {
+                alert('加载失败，请检查网络和后端地址');
+            }
+        }
+
+        async function updateStatus(id, newStatus) {
+            const password = document.getElementById('password').value;
+            await fetch(`${API_URL}/api/admin/update/${id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus, password: password })
+            });
+            loadData(); // 刷新列表
+        }
+    </script>
+</body>
+</html>

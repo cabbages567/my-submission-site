@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>简易投稿系统</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+        input, textarea, button { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+        textarea { height: 150px; }
+        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        .message { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>📝 在线投稿</h1>
+    <p>填写以下信息提交您的稿件。</p>
+
+    <form id="submitForm">
+        <input type="text" name="title" placeholder="稿件标题" required>
+        <input type="text" name="author" placeholder="作者姓名" required>
+        <textarea name="content" placeholder="稿件内容" required></textarea>
+        <button type="submit">提交稿件</button>
+    </form>
+
+    <div id="msg" class="message"></div>
+    <p><a href="admin.html" target="_blank">进入管理后台</a></p>
+
+    <script>
+        const API_URL = 'https://your-railway-backend-url.up.railway.app'; // 第5步会修改这里
+
+        document.getElementById('submitForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            const msgDiv = document.getElementById('msg');
+            msgDiv.innerHTML = '<div class="message">提交中...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/submit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    msgDiv.innerHTML = `<div class="message success">✅ ${result.message}</div>`;
+                    form.reset();
+                } else {
+                    msgDiv.innerHTML = `<div class="message error">❌ ${result.error}</div>`;
+                }
+            } catch (err) {
+                msgDiv.innerHTML = `<div class="message error">❌ 网络错误，请稍后重试。</div>`;
+            }
+        };
+    </script>
+</body>
+</html>
